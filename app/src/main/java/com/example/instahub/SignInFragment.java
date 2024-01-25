@@ -113,25 +113,36 @@ public class SignInFragment extends Fragment {
     }
 
     private void accederConEmail() {
+        String email = emailEditText.getText().toString();
+        String password = passwordEditText.getText().toString();
+
+        if (email.isEmpty() || password.isEmpty()) {
+            // Mostrar un mensaje de error indicando que los campos no pueden estar vacíos
+            Snackbar.make(requireView(), "Por favor, complete todos los campos", Snackbar.LENGTH_LONG).show();
+            return;
+        }
+
         signInForm.setVisibility(View.GONE);
         signInProgressBar.setVisibility(View.VISIBLE);
 
-        mAuth.signInWithEmailAndPassword(emailEditText.getText().toString(), passwordEditText.getText().toString())
+        mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(requireActivity(), new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        signInForm.setVisibility(View.VISIBLE);
+                        signInProgressBar.setVisibility(View.GONE);
+
                         if (task.isSuccessful()) {
                             actualizarUI(mAuth.getCurrentUser());
                         } else {
                             Snackbar.make(requireView(), "Error: " + task.getException(), Snackbar.LENGTH_LONG).show();
                         }
-                        signInForm.setVisibility(View.VISIBLE);
-                        signInProgressBar.setVisibility(View.GONE);
                     }
                 });
     }
 
-        private void actualizarUI(FirebaseUser currentUser) {
+
+    private void actualizarUI(FirebaseUser currentUser) {
             if(currentUser != null){
                 navController.navigate(R.id.homeFragment);
             }
