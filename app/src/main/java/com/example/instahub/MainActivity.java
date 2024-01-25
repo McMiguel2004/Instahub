@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if(user != null){
                     if(user.getPhotoUrl() == null){
+
                         photo.setImageResource(R.drawable.user);
                     } else {
                         Glide.with(MainActivity.this)

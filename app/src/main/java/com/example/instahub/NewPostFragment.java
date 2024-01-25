@@ -34,6 +34,7 @@ public class NewPostFragment extends Fragment {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_new_post, container, false);
     }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -50,10 +51,11 @@ public class NewPostFragment extends Fragment {
             }
         });
     }
+
     private void publicar() {
         String postContent = postConentEditText.getText().toString();
 
-        if(TextUtils.isEmpty(postContent)){
+        if (TextUtils.isEmpty(postContent)) {
             postConentEditText.setError("Required");
             return;
         }
@@ -66,7 +68,20 @@ public class NewPostFragment extends Fragment {
     private void guardarEnFirestore(String postContent) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-        Post post = new Post(user.getUid(), user.getDisplayName(), user.getPhotoUrl().toString(), postContent);
+        String photo;
+        String displayName = user.getDisplayName();
+
+        if (user.getPhotoUrl() == null) {
+            photo = null;
+        } else {
+            photo = user.getPhotoUrl().toString();
+        }
+        if (user.getDisplayName() == null) {
+            displayName = user.getEmail().toString();
+        } else {
+            displayName = user.getDisplayName().toString();
+        }
+        Post post = new Post(user.getUid(), displayName, photo, postContent);
 
         FirebaseFirestore.getInstance().collection("posts")
                 .add(post)
@@ -77,5 +92,4 @@ public class NewPostFragment extends Fragment {
                     }
                 });
     }
-
 }
