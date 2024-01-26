@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
                                 .circleCrop()
                                 .into(photo);
                     }
-                    if(user.getDisplayName().isEmpty()){
+                    if(user.getDisplayName() == null){
                         name.setText(FirebaseAuth.getInstance().getCurrentUser().getEmail());
                     }
                     else {
