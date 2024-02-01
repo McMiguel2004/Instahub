@@ -55,6 +55,12 @@
                     android:layout_marginStart="4dp"
                     android:layout_gravity="center_vertical"
                     android:text="200K"/>
+                <ImageView
+                    android:id="@+id/mediaImage"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="196dp"
+                    android:layout_height="196dp"
+                    android:adjustViewBounds="true"/>
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

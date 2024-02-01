@@ -23,8 +23,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.example.instahub.AppViewModel;
+import com.example.instahub.Post;
+import com.example.instahub.R;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -36,13 +40,17 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
-
+import firebase.com.protolitewrapper.BuildConfig;
 public class NewPostFragment extends Fragment {
+
     public AppViewModel appViewModel;
-    private NavController navController;
 
     Button publishButton;
     EditText postConentEditText;
+    NavController navController;
+    Uri mediaUri;
+    String mediaTipo;
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -56,6 +64,7 @@ public class NewPostFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         navController = Navigation.findNavController(view);
+        appViewModel = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
 
         publishButton = view.findViewById(R.id.publishButton);
         postConentEditText = view.findViewById(R.id.postContentEditText);
@@ -67,19 +76,16 @@ public class NewPostFragment extends Fragment {
             }
         });
 
-        appViewModel = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
-
         view.findViewById(R.id.camara_fotos).setOnClickListener(v -> tomarFoto());
         view.findViewById(R.id.camara_video).setOnClickListener(v -> tomarVideo());
         view.findViewById(R.id.grabar_audio).setOnClickListener(v -> grabarAudio());
         view.findViewById(R.id.imagen_galeria).setOnClickListener(v -> seleccionarImagen());
         view.findViewById(R.id.video_galeria).setOnClickListener(v -> seleccionarVideo());
         view.findViewById(R.id.audio_galeria).setOnClickListener(v -> seleccionarAudio());
-
         appViewModel.mediaSeleccionado.observe(getViewLifecycleOwner(), media -> {
             this.mediaUri = media.uri;
             this.mediaTipo = media.tipo;
-            Glide.with(this).load(media.uri).into(view.findViewById(R.id.previsualizacion));
+            Glide.with(this).load(media.uri).into((ImageView) view.findViewById(R.id.previsualizacion));
         });
     }
 
@@ -98,11 +104,26 @@ public class NewPostFragment extends Fragment {
             pujaIguardarEnFirestore(postContent);
         }
     }
+
     private void guardarEnFirestore(String postContent, String mediaUrl) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        Post post = new Post(user.getUid(), user.getDisplayName(),
-                (user.getPhotoUrl() != null ? user.getPhotoUrl().toString() :
-                        "R.drawable.user"), postContent, mediaUrl, mediaTipo);
+        String photo;
+        String displayName = user.getDisplayName();
+
+        if (user.getPhotoUrl() == null){
+            photo = null;
+        }
+        else {
+            photo = user.getPhotoUrl().toString();
+        }
+        if (user.getDisplayName() == null){
+            displayName = user.getEmail().toString();
+        }
+        else{
+            displayName = user.getDisplayName().toString();
+        }
+        Post post = new Post(user.getUid(), displayName, photo, postContent, mediaUrl, mediaTipo);
+
         FirebaseFirestore.getInstance().collection("posts")
                 .add(post)
                 .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
@@ -120,8 +141,7 @@ public class NewPostFragment extends Fragment {
                 .putFile(mediaUri)
                 .continueWithTask(task ->
                         task.getResult().getStorage().getDownloadUrl())
-                .addOnSuccessListener(url -> guardarEnFirestore(postText,
-                        url.toString()));
+                .addOnSuccessListener(url -> guardarEnFirestore(postText, url.toString()));
     }
 
     private final ActivityResultLauncher<String> galeria =
@@ -146,7 +166,6 @@ public class NewPostFragment extends Fragment {
                             "audio");
                 }
             });
-
     private void seleccionarImagen() {
         mediaTipo = "image";
         galeria.launch("image/*");
@@ -178,8 +197,6 @@ public class NewPostFragment extends Fragment {
         } catch (IOException e) {}
     }
     private void grabarAudio() {
-        grabadoraAudio.launch(new
-                Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION));
+        grabadoraAudio.launch(new Intent(MediaStore.Audio.Media.RECORD_SOUND_ACTION));
     }
-
 }

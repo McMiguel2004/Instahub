@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,7 +26,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 
 public class HomeFragment extends Fragment {
-
+    public AppViewModel appViewModel;
     NavController navController;
 
     @Override
@@ -44,6 +45,8 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 navController.navigate(R.id.newPostFragment);
+                appViewModel = new ViewModelProvider(requireActivity()).get(AppViewModel.class);
+
             }
         });
 
@@ -94,17 +97,32 @@ public class HomeFragment extends Fragment {
                         .update("likes."+uid, post.likes.containsKey(uid) ?
                                 FieldValue.delete() : true);
             });
+            // Miniatura de media
+            if (post.mediaUrl != null) {
+                holder.mediaImageView.setVisibility(View.VISIBLE);
+                if ("audio".equals(post.mediaType)) {
+                    Glide.with(requireView()).load(R.drawable.audio).centerCrop().into(holder.mediaImageView);
+                } else {
+                    Glide.with(requireView()).load(post.mediaUrl).centerCrop().into(holder.mediaImageView);
+                }
+                holder.mediaImageView.setOnClickListener(view -> {
+                    appViewModel.postSeleccionado.setValue(post);
+                    navController.navigate(R.id.mediaFragment);
+                });
+            } else {
+                holder.mediaImageView.setVisibility(View.GONE);
+            }
 
         }
-
         class PostViewHolder extends RecyclerView.ViewHolder {
-            ImageView authorPhotoImageView, likeImageView;
+            ImageView authorPhotoImageView, likeImageView, mediaImageView;
             TextView authorTextView, contentTextView, numLikesTextView;
             PostViewHolder(@NonNull View itemView) {
                 super(itemView);
                 authorPhotoImageView =
                         itemView.findViewById(R.id.photoImageView);
                 likeImageView = itemView.findViewById(R.id.likeImageView);
+                mediaImageView = itemView.findViewById(R.id.mediaImage);
                 authorTextView = itemView.findViewById(R.id.authorTextView);
                 contentTextView = itemView.findViewById(R.id.contentTextView);
                 numLikesTextView = itemView.findViewById(R.id.numLikesTextView);
